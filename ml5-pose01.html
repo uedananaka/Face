@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ビデオで認識</title>
+
+    <!-- 1. ここにP5.jsを読み込む -->
+    <script src="https://cdn.jsdelivr.net/npm/p5"></script>
+    <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+
+    <!-- 2.以下にsetup関数とdraw関数を定義 -->
+    <script>
+      let video;
+      let poseNet;
+      let poses = [];
+      let skeletons = [];
+
+      function preload() {
+        migi = loadImage("images/migi.png");
+        hidari = loadImage("images/hidari.png");
+        mimi = loadImage("images/mimi.png");
+        hana = loadImage("images/hana.png");
+        uzumaki = loadImage("images/uzumaki.png");
+      }
+
+      function setup() {
+        createCanvas(640, 480);
+        video = createCapture(VIDEO);
+
+        // Create a new poseNet method with a single detection
+        poseNet = ml5.poseNet(video, modelReady);
+        // This sets up an event that fills the global variable "poses"
+        // with an array every time new poses are detected
+        poseNet.on("pose", function (results) {
+          poses = results;
+        });
+        // Hide the video element, and just show the canvas
+        video.hide();
+      }
+
+      function modelReady() {
+        select("#status").html("Model Loaded");
+      }
+
+      function draw() {
+        image(video, 0, 0, width, height);
+        // We can call both functions to draw all keypoints and the skeletons
+        drawKeypoints();
+        drawSkeleton();
+      }
+      // A function to draw ellipses over the detected keypoints
+      function drawKeypoints() {
+        for (let i = 0; i < poses.length; i++) {
+          for (let j = 0; j < poses[i].pose.keypoints.length; j++) {
+            let keypoint = poses[i].pose.keypoints[j];
+            if (keypoint.score > 0.2) {
+              keypoint = poses[i].pose.keypoints[1];
+              left = keypoint.position.x;
+              console.log("左目" + left);
+
+              keypoint = poses[i].pose.keypoints[2];
+              right = keypoint.position.x;
+              console.log("右目" + right);
+
+              if (left - right <= 60) {
+                //おぶす
+                //文字
+                keypoint = poses[i].pose.keypoints[0];
+                fill(231, 53, 98);
+                textSize(30);
+                text(
+                  "おぶす",
+                  keypoint.position.x - 35,
+                  keypoint.position.y - 50
+                );
+
+                //左目
+                keypoint = poses[i].pose.keypoints[1];
+                image(
+                  uzumaki,
+                  keypoint.position.x - 5,
+                  keypoint.position.y + 10,
+                  50,
+                  50
+                );
+
+                //右目
+                keypoint = poses[i].pose.keypoints[2];
+                image(
+                  uzumaki,
+                  keypoint.position.x - 40,
+                  keypoint.position.y + 10,
+                  50,
+                  50
+                );
+              }
+
+              if (60 < left - right) {
+                //美人
+                //文字
+                keypoint = poses[i].pose.keypoints[0];
+                fill(231, 53, 98);
+                textSize(50);
+                text(
+                  "美人",
+                  keypoint.position.x - 35,
+                  keypoint.position.y - 100
+                );
+
+                //左目
+                keypoint = poses[i].pose.keypoints[1];
+                image(
+                  migi,
+                  keypoint.position.x - 35,
+                  keypoint.position.y - 35,
+                  75,
+                  75
+                );
+
+                //右目
+                keypoint = poses[i].pose.keypoints[2];
+                image(
+                  hidari,
+                  keypoint.position.x - 35,
+                  keypoint.position.y - 35,
+                  75,
+                  75
+                );
+                //左耳
+                keypoint = poses[i].pose.keypoints[3];
+                image(
+                  hana,
+                  keypoint.position.x - 5,
+                  keypoint.position.y - 5,
+                  40,
+                  40
+                );
+                //右耳
+                keypoint = poses[i].pose.keypoints[4];
+                image(
+                  hana,
+                  keypoint.position.x - 35,
+                  keypoint.position.y - 5,
+                  40,
+                  40
+                );
+                background(254, 249, 251, 10);
+              }
+            }
+          }
+        }
+      }
+
+      // A function to draw the skeletons
+      function drawSkeleton() {
+        // // Loop through all the skeletons detected
+        // for (let i = 0; i < poses.length; i++) {
+        //   // For every skeleton, loop through all body connections
+        //   for (let j = 0; j < poses[i].skeleton.length; j++) {
+        //     let partA = poses[i].skeleton[j][0];
+        //     let partB = poses[i].skeleton[j][1];
+        //     stroke(255, 0, 0);
+        //     line(
+        //       partA.position.x,
+        //       partA.position.y,
+        //       partB.position.x,
+        //       partB.position.y
+        //     );
+        //   }
+        // }
+      }
+    </script>
+    <style>
+      body {
+        font-family: "Kosugi Maru", sans-serif;
+        text-align: center;
+        background-color: #e73562;
+      }
+
+      h1 {
+        color: #fef9fb;
+        font-size: 40px;
+        margin: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>近づくことが<br />「美人」への第一歩よ💕</h1>
+    <div id="status"></div>
+    <div id="result"></div>
+    <div id="probability"></div>
+  </body>
+</html>
